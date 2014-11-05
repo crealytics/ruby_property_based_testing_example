@@ -26,11 +26,16 @@ describe EmailValidator do
       lambda {|r| r.string(:alpha) + r.string(:alnum) + "@" + r.string(:alpha) + r.sized(3) {r.string(:alpha)} }
     )
   end
-
+  def valid_emails(r)
+    r.array &method(:valid_email)
+  end
+  def invalid_emails(r)
+    (r.array(&method(:valid_email)) + r.array(1, &method(:invalid_email))).shuffle
+  end
   it "validates correct emails as OK" do
-    property_of(&method(:valid_email)).check {|em| expect(subject).to validate([em]) }
+    property_of(&method(:valid_emails)).check {|em| expect(subject).to validate(em) }
   end
   it "validates incorrect emails as NOT OK" do
-    property_of(&method(:invalid_email)).check {|em| expect(subject).not_to validate([em]) }
+    property_of(&method(:invalid_emails)).check {|em| expect(subject).not_to validate(em) }
   end
 end

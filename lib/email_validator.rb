@@ -1,6 +1,6 @@
 class EmailValidator
   REGEX = /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i
   def validate(emails)
-    REGEX =~ emails.first
+    emails.all? {|em| REGEX =~ em }
   end
 end

@@ -1,6 +1,7 @@
 require_relative '../lib/email_validator'
 
 require 'rspec/expectations'
+require 'rantly/property'
 
 RSpec::Matchers.define :validate do |to_validate|
   match do |validator|
@@ -15,10 +16,21 @@ RSpec::Matchers.define :validate do |to_validate|
 end
 
 describe EmailValidator do
+  def valid_email(r)
+    r.string(:alpha) + r.string(:alnum) + "@" + r.string(:alpha) + "." + r.sized(3) {r.string(:alpha)}
+  end
+  def invalid_email(r)
+    r.branch(
+      lambda {|r| r.string(:alpha) + r.string(:alnum) + r.string(:alpha) + r.sized(3) {r.string(:alpha)} },
+      lambda {|r| r.string(:alpha) + r.string(:alnum) + r.string(:alpha) + "." + r.sized(3) {r.string(:alpha)} },
+      lambda {|r| r.string(:alpha) + r.string(:alnum) + "@" + r.string(:alpha) + r.sized(3) {r.string(:alpha)} }
+    )
+  end
+
   it "validates correct emails as OK" do
-    expect(subject).to validate(["blablub@foo.de"])
+    property_of(&method(:valid_email)).check {|em| expect(subject).to validate([em]) }
   end
   it "validates incorrect emails as NOT OK" do
-    expect(subject).not_to validate(["blablub@foo"])
+    property_of(&method(:invalid_email)).check {|em| expect(subject).not_to validate([em]) }
   end
 end
